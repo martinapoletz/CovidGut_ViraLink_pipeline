@@ -1,17 +1,23 @@
 # CovidGut_ViraLink_pipeline
 
-uhukeukqhkuwerhkrjhwkjrhqjhejkqhehqk
-whjqgehjwqghjegq
 
-### header 1
+## 2_process_a_priori_networks
+
+### Downloading_omnipath_dorothea.R
+
+Script to download directed and signed OmniPath protein-protein interactions and regulatory interactions from DoRothEA (within OmniPath, confidence levels A,B,C)
+
+Input: outdir        
+Output: Omnipath and dorothea networks with correct headers
 
 ```r
+# Capture  messages and errors to a file.
 zz <- file("virallink.out", open="a")
 sink(zz, type="message", append = TRUE)
 message("\nStarting Omnipath/Dorothea download script: Downloading_omnipath_dorothea.R\n")
 
-># Installing packages
->if (!requireNamespace("tidyverse", quietly = TRUE)) 
+# Installing packages
+if (!requireNamespace("tidyverse", quietly = TRUE)) 
   install.packages("tidyverse", repos = "https://cloud.r-project.org")
 if (!requireNamespace("devtools", quietly = TRUE)) 
   install.packages("devtools", repos = "https://cloud.r-project.org")
@@ -122,9 +128,105 @@ write.table(human_tf_data_filtered, paste0(path,"/dorothea_abc_signed_directed.t
 ## reset message sink and close the file connection
 sink(type="message")
 close(zz)
-'''r
 
-hjkkhkjhkj
+```
+
+### filter_network_expressed_genes.R
+
+```r
+# Capture  messages and errors to a file.
+zz <- file("virallink.out", open="a")
+sink(zz, type="message", append = TRUE)
+message("\nStarting contextualised network reconstruction: filter_network_expressed_genes.R\n")
+
+# Installing packages
+if (!requireNamespace("tidyverse", quietly = TRUE)) 
+  install.packages("tidyverse", repos = "https://cloud.r-project.org")
+
+# Load packages
+library(tidyverse)
+
+# Define parameters
+args <- commandArgs(trailingOnly = TRUE)
+
+# Check length of command line parameters
+if (length(args) != 5){
+  stop("Wrong number of command line input parameters. Please check.")
+}
+
+# Output directory
+outdir <- args[5]
+
+# ID type of the  expressed genes - uniprot or gene symbols
+id_type <- args[4] # symbol or uniprot - the ids in the expression data
+
+# Create output dir if required
+path <- file.path(outdir, "2_process_a_priori_networks")
+dir.create(path, showWarnings = FALSE, recursive=TRUE)
+
+if (id_type == "symbol"){
+  source_col = "source_genesymbol"
+  target_col = "target_genesymbol"
+} else if (id_type == "uniprot") {
+  source_col = "to"
+  target_col = "from"
+}
+
+# Gene expression file - tab delimited
+expressed <- read.csv(args[1], sep = "\t")
+dorothea <- args[2]
+omnipath <- args[3]
+
+files <- c(dorothea, omnipath)
+
+for (i in files){
+  
+  # Network file - space delimited 
+  network <- read.csv(file.path(i), sep = " ")
+  
+  # Filter source and target nodes
+  network_f <- network %>% filter((get(source_col) %in% expressed$Gene) & (get(target_col) %in% expressed$Gene))
+  
+  # Get network name for out filename
+  file <- strsplit(i, "/")[[1]][4]
+  name <- strsplit(file, "_")[[1]][1]
+  
+  # Save output
+  write.table(network_f, file = file.path(path, paste0(name, "_contextualised_network.txt")), sep = "\t", quote = F, row.names = F)
+}
+
+# reset message sink and close the file connection
+sink(type="message")
+close(zz)
+
+```
+
+### get_regulator_deg_network.R
+
+## 3_network_diffusion
+
+### prepare_tiedie_input.R
+
+### tiedie.py
+
+## 4_create_network
+
+### combined_edge_node_tables.R
+
+## 5_betweenness_and_cluster_analysis
+
+### betweenness_and_clustering.R
+
+### cytoscape_visualisation.R
+
+## 6_functional_analysis
+
+### cluster_functional_analysis.R
+
+### network_functional_analysis.R
+
+### reformat_functional_result.R
+
 
 
 
